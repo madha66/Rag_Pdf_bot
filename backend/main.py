@@ -449,6 +449,16 @@ def delete_chat(chat_id: int):
     }
 
 # =========================
+# ROOT
+# =========================
+
+@app.get("/")
+def read_root():
+    return {
+        "message": "Welcome to the PDF AI Assistant API. The backend is running!"
+    }
+
+# =========================
 # HEALTH
 # =========================
 
