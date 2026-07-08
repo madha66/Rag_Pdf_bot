@@ -205,39 +205,60 @@ async def process_pdf(file: UploadFile = File(...)):
     global current_chat_id
     global current_pdf_name
 
+    print(f"--- Starting PDF Processing for Chat {current_chat_id} ---")
     verify_db_connection()
 
     if current_chat_id is None:
+        print("Error: current_chat_id is None")
         raise HTTPException(
             status_code=400,
             detail="Create chat first"
         )
 
     if not file.filename.lower().endswith(".pdf"):
+        print(f"Error: Invalid file format {file.filename}")
         raise HTTPException(
             status_code=400,
             detail="Only PDFs allowed"
         )
 
+    print("Reading PDF file bytes...")
     pdf_bytes = await file.read()
+    print("Extracting text from PDF...")
     text = extract_text_from_pdf(pdf_bytes)
 
     if not text.strip():
+        print("Error: No readable text extracted from PDF")
         raise HTTPException(
             status_code=400,
             detail="No readable text"
         )
 
+    print(f"Extracted {len(text)} characters. Splitting text into chunks...")
     chunks = split_text(text)
-    current_vectorstore = build_vectorstore(chunks)
+    print(f"Generated {len(chunks)} text chunks. Generating embeddings and building FAISS vectorstore...")
+    
+    try:
+        current_vectorstore = build_vectorstore(chunks)
+        print("FAISS vectorstore built successfully!")
+    except Exception as e:
+        print(f"Error building FAISS vectorstore: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating embeddings: {str(e)}"
+        )
+
+    print(f"Saving vectorstore locally for chat_{current_chat_id}...")
     save_vectorstore(
         current_vectorstore,
         current_chat_id
     )
 
+    print("Initializing LLM...")
     current_chain = get_llm()
     current_pdf_name = file.filename
 
+    print("Updating chat title in PostgreSQL database...")
     cursor.execute(
         """
         UPDATE chats
@@ -250,6 +271,7 @@ async def process_pdf(file: UploadFile = File(...)):
         )
     )
     conn.commit()
+    print("PDF processed successfully!")
 
     return {
         "success": True,
