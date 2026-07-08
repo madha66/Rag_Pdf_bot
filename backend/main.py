@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
 from langchain_classic.chains import RetrievalQA
@@ -88,7 +88,8 @@ class QuestionRequest(BaseModel):
 # EMBEDDINGS
 # =========================
 
-embedder = HuggingFaceEmbeddings(
+embedder = HuggingFaceInferenceAPIEmbeddings(
+    api_key=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
     model_name="all-MiniLM-L6-v2"
 )
 
