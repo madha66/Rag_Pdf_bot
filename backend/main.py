@@ -83,7 +83,7 @@ class QuestionRequest(BaseModel):
 
 embedder = HuggingFaceInferenceAPIEmbeddings(
     api_key=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
-    model_name="all-MiniLM-L6-v2"
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
 # =========================
